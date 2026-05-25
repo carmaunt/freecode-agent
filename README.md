@@ -39,7 +39,21 @@ Exemplo de configuração local:
   "provider": "ollama",
   "model": "qwen2.5-coder:7b",
   "ollamaHost": "http://localhost:11434",
-  "maxSteps": 2
+  "maxSteps": 2,
+  "allowedCommands": {
+    "npm:test": {
+      "command": "npm",
+      "args": ["test"]
+    },
+    "npm:build": {
+      "command": "npm",
+      "args": ["run", "build"]
+    },
+    "npm:typecheck": {
+      "command": "npm",
+      "args": ["run", "typecheck"]
+    }
+  }
 }
 ```
 
@@ -125,13 +139,20 @@ Esse comando copia o conteúdo de `rascunho.ts` para `src/exemplo.ts`, mostra di
 npm run dev -- run npm:typecheck
 ```
 
-Comandos permitidos nesta versão:
+Os comandos permitidos vêm de `allowedCommands` no `.freecode-agent.json`. O agente não executa shell livre. Cada comando é definido como binário + lista de argumentos.
 
-- `npm:test` executa `npm test`
-- `npm:build` executa `npm run build`
-- `npm:typecheck` executa `npm run typecheck`
+Exemplo:
 
-O agente não executa shell livre. Apenas comandos pré-aprovados são aceitos, com timeout padrão de 30 segundos.
+```json
+{
+  "allowedCommands": {
+    "app:lint": {
+      "command": "npm",
+      "args": ["run", "lint"]
+    }
+  }
+}
+```
 
 ## Logs estruturados
 
@@ -173,10 +194,12 @@ Esse comando compila o projeto TypeScript para `dist`.
 
 O GitHub Actions executa automaticamente em push e pull request para `main`:
 
-- `npm ci`
+- `npm install`
 - `npm test`
 - `npm run typecheck`
 - `npm run build`
+
+Quando houver `package-lock.json`, o workflow pode voltar para `npm ci`.
 
 ## Formatos de proposta
 
@@ -204,6 +227,7 @@ Para executar comando seguro:
 A versão 0.1 consegue:
 
 - carregar configuração local por `.freecode-agent.json`;
+- configurar comandos permitidos por projeto;
 - aplicar prioridade entre flags, ambiente, config e defaults;
 - listar a raiz do projeto com proteção contra acesso fora da pasta atual;
 - ler arquivos pequenos de contexto;
@@ -223,7 +247,7 @@ A versão 0.1 consegue:
 
 ## Próximas etapas
 
-1. Criar configuração de comandos permitidos por projeto.
-2. Expandir cobertura de testes para config, logger e LLM clients.
-3. Preparar empacotamento para uso global como CLI.
-4. Adicionar releases automatizadas.
+1. Expandir cobertura de testes para config, logger e LLM clients.
+2. Preparar empacotamento para uso global como CLI.
+3. Adicionar releases automatizadas.
+4. Criar documentação de arquitetura interna.
