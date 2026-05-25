@@ -24,6 +24,34 @@ ollama pull qwen2.5-coder:7b
 npm install
 ```
 
+## Configuração do projeto
+
+Copie o arquivo de exemplo:
+
+```bash
+cp .freecode-agent.example.json .freecode-agent.json
+```
+
+Exemplo de configuração local:
+
+```json
+{
+  "provider": "ollama",
+  "model": "qwen2.5-coder:7b",
+  "ollamaHost": "http://localhost:11434",
+  "maxSteps": 2
+}
+```
+
+A ordem de prioridade é:
+
+1. flags no terminal;
+2. variáveis de ambiente;
+3. `.freecode-agent.json`;
+4. defaults internos.
+
+O arquivo `.freecode-agent.json` é ignorado pelo Git. Versione apenas `.freecode-agent.example.json`.
+
 ## Perguntar ao agente
 
 ```bash
@@ -130,6 +158,8 @@ Para executar comando seguro:
 
 A versão 0.1 consegue:
 
+- carregar configuração local por `.freecode-agent.json`;
+- aplicar prioridade entre flags, ambiente, config e defaults;
 - listar a raiz do projeto com proteção contra acesso fora da pasta atual;
 - ler arquivos pequenos de contexto;
 - enviar contexto ao Ollama;
@@ -148,4 +178,4 @@ A versão 0.1 consegue:
 1. Melhorar diff usando algoritmo unificado.
 2. Criar testes automatizados para parser, diff e comandos.
 3. Adicionar logs estruturados de execução.
-4. Criar arquivo de configuração `.freecode-agent.json`.
+4. Criar configuração de comandos permitidos por projeto.
