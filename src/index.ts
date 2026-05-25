@@ -4,6 +4,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
+import { loadConfig } from './config.js';
 import { collectProjectContext } from './context.js';
 import { listFiles, resolveSafePath, writeProjectFile } from './tools.js';
 import { confirmAction } from './confirm.js';
@@ -12,12 +13,12 @@ import { parseAgentProposal } from './proposal.js';
 import { applyProposal } from './applyProposal.js';
 import { listAllowedCommands, runAllowedCommand } from './commands.js';
 import { runAgentLoop } from './agentLoop.js';
-import { chatWithModel, type LlmProvider } from './llm.js';
+import { chatWithModel } from './llm.js';
 
 type AskOptions = {
-  provider: LlmProvider;
-  model: string;
-  host: string;
+  provider?: string;
+  model?: string;
+  host?: string;
   baseUrl?: string;
   apiKey?: string;
   proposal?: boolean;
@@ -25,12 +26,12 @@ type AskOptions = {
 };
 
 type LoopOptions = {
-  provider: LlmProvider;
-  model: string;
-  host: string;
+  provider?: string;
+  model?: string;
+  host?: string;
   baseUrl?: string;
   apiKey?: string;
-  steps: string;
+  steps?: string;
 };
 
 const program = new Command();
@@ -44,9 +45,9 @@ program
   .command('ask')
   .description('Analisa o projeto atual e consulta o modelo local')
   .argument('<prompt...>', 'tarefa ou pergunta para o agente')
-  .option('--provider <provider>', 'provider: ollama ou openai-compatible', 'ollama')
-  .option('-m, --model <model>', 'modelo do provider escolhido', 'qwen2.5-coder:7b')
-  .option('--host <host>', 'URL do Ollama', 'http://localhost:11434')
+  .option('--provider <provider>', 'provider: ollama ou openai-compatible')
+  .option('-m, --model <model>', 'modelo do provider escolhido')
+  .option('--host <host>', 'URL do Ollama')
   .option('--base-url <baseUrl>', 'base URL para provider OpenAI-compatible')
   .option('--api-key <apiKey>', 'API key para provider OpenAI-compatible')
   .option('--proposal', 'força resposta em JSON estruturado para aplicar depois')
@@ -57,7 +58,7 @@ program
     const spinner = ora('Analisando projeto...').start();
 
     try {
-      const provider = parseProvider(options.provider);
+      const config = await loadConfig(cwd, options);
       const [files, tree] = await Promise.all([
         collectProjectContext(cwd),
         listFiles(cwd)
@@ -70,11 +71,11 @@ program
       spinner.text = 'Consultando modelo...';
 
       const answer = await chatWithModel({
-        provider,
-        host: options.host,
-        baseUrl: options.baseUrl,
+        provider: config.provider,
+        host: config.ollamaHost,
+        baseUrl: config.baseUrl,
         apiKey: options.apiKey,
-        model: options.model,
+        model: config.model,
         messages: [
           {
             role: 'system',
@@ -212,30 +213,25 @@ program
   .command('loop')
   .description('Executa um loop limitado de propostas do agente')
   .argument('<task...>', 'tarefa para o agente executar em etapas')
-  .option('--provider <provider>', 'provider: ollama ou openai-compatible', 'ollama')
-  .option('-m, --model <model>', 'modelo do provider escolhido', 'qwen2.5-coder:7b')
-  .option('--host <host>', 'URL do Ollama', 'http://localhost:11434')
+  .option('--provider <provider>', 'provider: ollama ou openai-compatible')
+  .option('-m, --model <model>', 'modelo do provider escolhido')
+  .option('--host <host>', 'URL do Ollama')
   .option('--base-url <baseUrl>', 'base URL para provider OpenAI-compatible')
   .option('--api-key <apiKey>', 'API key para provider OpenAI-compatible')
-  .option('--steps <number>', 'número máximo de etapas', '2')
+  .option('--steps <number>', 'número máximo de etapas')
   .action(async (taskParts: string[], options: LoopOptions) => {
     try {
-      const provider = parseProvider(options.provider);
-      const maxSteps = Number.parseInt(options.steps, 10);
-
-      if (!Number.isInteger(maxSteps) || maxSteps < 1 || maxSteps > 5) {
-        throw new Error('O número de etapas deve ser um inteiro entre 1 e 5.');
-      }
+      const config = await loadConfig(process.cwd(), options);
 
       await runAgentLoop({
         rootDir: process.cwd(),
         task: taskParts.join(' '),
-        provider,
-        model: options.model,
-        host: options.host,
-        baseUrl: options.baseUrl,
+        provider: config.provider,
+        model: config.model,
+        host: config.ollamaHost,
+        baseUrl: config.baseUrl,
         apiKey: options.apiKey,
-        maxSteps
+        maxSteps: config.maxSteps
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -243,14 +239,6 @@ program
       process.exitCode = 1;
     }
   });
-
-function parseProvider(provider: string): LlmProvider {
-  if (provider === 'ollama' || provider === 'openai-compatible') {
-    return provider;
-  }
-
-  throw new Error('Provider inválido. Use ollama ou openai-compatible.');
-}
 
 function defaultSystemPrompt(): string {
   return 'Você é um agente de programação local. Responda em português, seja técnico, direto e priorize ações seguras. Nesta versão você ainda não edita arquivos automaticamente; apenas analisa e orienta.';
