@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -11,6 +11,13 @@ import { confirmAction } from './confirm.js';
 import { createSimpleDiff } from './diff.js';
 import { parseAgentProposal } from './proposal.js';
 import { applyProposal } from './applyProposal.js';
+
+type AskOptions = {
+  model: string;
+  host: string;
+  proposal?: boolean;
+  out?: string;
+};
 
 const program = new Command();
 
@@ -25,7 +32,9 @@ program
   .argument('<prompt...>', 'tarefa ou pergunta para o agente')
   .option('-m, --model <model>', 'modelo do Ollama', 'qwen2.5-coder:7b')
   .option('--host <host>', 'URL do Ollama', 'http://localhost:11434')
-  .action(async (promptParts: string[], options: { model: string; host: string }) => {
+  .option('--proposal', 'força resposta em JSON estruturado para aplicar depois')
+  .option('--out <file>', 'salva a resposta do modelo em um arquivo')
+  .action(async (promptParts: string[], options: AskOptions) => {
     const prompt = promptParts.join(' ');
     const cwd = process.cwd();
     const spinner = ora('Analisando projeto...').start();
@@ -48,7 +57,7 @@ program
         messages: [
           {
             role: 'system',
-            content: 'Você é um agente de programação local. Responda em português, seja técnico, direto e priorize ações seguras. Nesta versão você ainda não edita arquivos automaticamente; apenas analisa e orienta.'
+            content: options.proposal ? proposalSystemPrompt() : defaultSystemPrompt()
           },
           {
             role: 'user',
@@ -58,8 +67,28 @@ program
       });
 
       spinner.stop();
+
+      if (options.proposal) {
+        const proposal = parseAgentProposal(answer);
+        const normalized = JSON.stringify(proposal, null, 2);
+        console.log(chalk.green('\nProposta estruturada:\n'));
+        console.log(normalized);
+
+        if (options.out) {
+          await writeFile(options.out, `${normalized}\n`, 'utf8');
+          console.log(chalk.green(`\nProposta salva em: ${options.out}`));
+        }
+
+        return;
+      }
+
       console.log(chalk.green('\nFreeCode Agent:\n'));
       console.log(answer);
+
+      if (options.out) {
+        await writeFile(options.out, `${answer}\n`, 'utf8');
+        console.log(chalk.green(`\nResposta salva em: ${options.out}`));
+      }
     } catch (error) {
       spinner.stop();
       const message = error instanceof Error ? error.message : String(error);
@@ -121,6 +150,22 @@ program
       process.exitCode = 1;
     }
   });
+
+function defaultSystemPrompt(): string {
+  return 'Você é um agente de programação local. Responda em português, seja técnico, direto e priorize ações seguras. Nesta versão você ainda não edita arquivos automaticamente; apenas analisa e orienta.';
+}
+
+function proposalSystemPrompt(): string {
+  return [
+    'Você é um agente de programação local.',
+    'Responda exclusivamente com um objeto JSON válido.',
+    'Não use markdown, comentários ou texto fora do JSON.',
+    'O JSON deve seguir exatamente este schema:',
+    '{"action":"write_file","path":"caminho/relativo/do/arquivo","content":"conteúdo completo do arquivo"}',
+    'Use apenas caminhos relativos dentro do projeto.',
+    'O campo content deve conter o conteúdo completo do arquivo final.'
+  ].join(' ');
+}
 
 async function readOptionalFile(path: string): Promise<string> {
   try {
