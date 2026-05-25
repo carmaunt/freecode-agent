@@ -11,6 +11,7 @@ import { confirmAction } from './confirm.js';
 import { createSimpleDiff } from './diff.js';
 import { parseAgentProposal } from './proposal.js';
 import { applyProposal } from './applyProposal.js';
+import { listAllowedCommands, runAllowedCommand } from './commands.js';
 
 type AskOptions = {
   model: string;
@@ -145,6 +146,42 @@ program
       const proposal = parseAgentProposal(rawProposal);
       await applyProposal(process.cwd(), proposal);
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red('\nErro:'), message);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command('run')
+  .description('Executa um comando permitido com timeout')
+  .argument('<commandKey>', `comando permitido: ${listAllowedCommands().join(', ')}`)
+  .action(async (commandKey: string) => {
+    const spinner = ora(`Executando ${commandKey}...`).start();
+
+    try {
+      const result = await runAllowedCommand(commandKey, process.cwd());
+      spinner.stop();
+
+      console.log(chalk.green(`\nComando: ${result.command}`));
+      console.log(`Exit code: ${result.exitCode}`);
+      console.log(`Timeout: ${result.timedOut ? 'sim' : 'não'}\n`);
+
+      if (result.stdout.trim()) {
+        console.log(chalk.cyan('stdout:'));
+        console.log(result.stdout);
+      }
+
+      if (result.stderr.trim()) {
+        console.log(chalk.yellow('stderr:'));
+        console.log(result.stderr);
+      }
+
+      if (result.exitCode && result.exitCode !== 0) {
+        process.exitCode = result.exitCode;
+      }
+    } catch (error) {
+      spinner.stop();
       const message = error instanceof Error ? error.message : String(error);
       console.error(chalk.red('\nErro:'), message);
       process.exitCode = 1;
