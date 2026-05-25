@@ -30,11 +30,28 @@ npm install
 npm run dev -- ask "analise este projeto"
 ```
 
-## Usar outro modelo
+## Usar outro modelo local
 
 ```bash
 npm run dev -- ask --model llama3.1:8b "explique a estrutura deste projeto"
 ```
+
+## Usar provider compatível com OpenAI
+
+Configure as variáveis de ambiente:
+
+```bash
+export FREECODE_BASE_URL="https://api.exemplo.com/v1"
+export FREECODE_API_KEY="sua-chave"
+```
+
+Depois execute:
+
+```bash
+npm run dev -- ask --provider openai-compatible --model modelo-coder "analise este projeto"
+```
+
+Também é possível passar `--base-url` e `--api-key`, mas variáveis de ambiente são recomendadas para evitar expor segredo no histórico do terminal.
 
 ## Gerar proposta estruturada
 
@@ -59,6 +76,12 @@ npm run dev -- loop --steps 2 "crie um arquivo src/hello.ts e valide o projeto"
 ```
 
 O loop gera uma proposta por etapa, aplica somente após confirmação e respeita o limite máximo de 5 etapas.
+
+## Rodar loop com provider compatível com OpenAI
+
+```bash
+npm run dev -- loop --provider openai-compatible --model modelo-coder --steps 2 "crie um arquivo src/hello.ts e valide o projeto"
+```
 
 ## Escrever arquivo manualmente com confirmação e diff
 
@@ -110,6 +133,7 @@ A versão 0.1 consegue:
 - listar a raiz do projeto com proteção contra acesso fora da pasta atual;
 - ler arquivos pequenos de contexto;
 - enviar contexto ao Ollama;
+- usar providers compatíveis com OpenAI;
 - retornar uma análise técnica no terminal;
 - gerar propostas JSON estruturadas usando o modelo;
 - escrever arquivos manualmente com confirmação explícita;
@@ -121,7 +145,7 @@ A versão 0.1 consegue:
 
 ## Próximas etapas
 
-1. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
-2. Melhorar diff usando algoritmo unificado.
-3. Criar testes automatizados para parser, diff e comandos.
-4. Adicionar logs estruturados de execução.
+1. Melhorar diff usando algoritmo unificado.
+2. Criar testes automatizados para parser, diff e comandos.
+3. Adicionar logs estruturados de execução.
+4. Criar arquivo de configuração `.freecode-agent.json`.
