@@ -38,6 +38,19 @@ npm run dev -- --model llama3.1:8b "explique a estrutura deste projeto"
 
 ## Estado atual
 
-A versão 0.1 lê arquivos pequenos do projeto atual, envia contexto ao Ollama e retorna uma resposta técnica.
+A versão 0.1 consegue:
 
-Ainda não edita arquivos. A próxima etapa será adicionar ferramentas controladas como leitura específica, escrita com confirmação e execução segura de comandos.
+- listar a raiz do projeto com proteção contra acesso fora da pasta atual;
+- ler arquivos pequenos de contexto;
+- enviar contexto ao Ollama;
+- retornar uma análise técnica no terminal.
+
+Ainda não edita arquivos.
+
+## Próximas etapas
+
+1. Criar escrita controlada com confirmação do usuário.
+2. Criar modo diff antes de salvar alterações.
+3. Adicionar execução segura de comandos.
+4. Criar loop de agente com ferramentas estruturadas.
+5. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
