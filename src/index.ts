@@ -6,8 +6,9 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { chatWithOllama } from './ollama.js';
 import { collectProjectContext } from './context.js';
-import { listFiles, writeProjectFile } from './tools.js';
+import { listFiles, resolveSafePath, writeProjectFile } from './tools.js';
 import { confirmAction } from './confirm.js';
+import { createSimpleDiff } from './diff.js';
 
 const program = new Command();
 
@@ -67,17 +68,25 @@ program
 
 program
   .command('write')
-  .description('Escreve um arquivo no projeto atual após confirmação')
+  .description('Escreve um arquivo no projeto atual após mostrar diff e pedir confirmação')
   .argument('<target>', 'caminho do arquivo que será escrito')
   .requiredOption('--from <source>', 'arquivo local usado como origem do conteúdo')
   .action(async (target: string, options: { from: string }) => {
     try {
+      const cwd = process.cwd();
       const content = await readFile(options.from, 'utf8');
+      const targetFullPath = resolveSafePath(cwd, target);
+      const currentContent = await readOptionalFile(targetFullPath);
+      const diff = createSimpleDiff(currentContent, content);
 
       console.log(chalk.yellow('\nAlteração solicitada:'));
       console.log(`Arquivo destino: ${target}`);
       console.log(`Arquivo origem: ${options.from}`);
-      console.log(`Tamanho: ${content.length} caracteres\n`);
+      console.log(`Tamanho novo: ${content.length} caracteres\n`);
+
+      console.log(chalk.cyan('Preview das alterações:'));
+      console.log(diff);
+      console.log('');
 
       const confirmed = await confirmAction('Confirmar gravação do arquivo?');
 
@@ -86,7 +95,7 @@ program
         return;
       }
 
-      const result = await writeProjectFile(process.cwd(), target, content);
+      const result = await writeProjectFile(cwd, target, content);
       console.log(chalk.green(result.output));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -94,5 +103,13 @@ program
       process.exitCode = 1;
     }
   });
+
+async function readOptionalFile(path: string): Promise<string> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch {
+    return '';
+  }
+}
 
 program.parseAsync(process.argv);
