@@ -1,13 +1,22 @@
 import { readFile } from 'node:fs/promises';
 import chalk from 'chalk';
 import { runAllowedCommand } from './commands.js';
+import { type AllowedCommand } from './config.js';
 import { confirmAction } from './confirm.js';
 import { createUnifiedDiff } from './diff.js';
 import { writeLog } from './logger.js';
 import { type AgentProposal } from './proposal.js';
 import { resolveSafePath, writeProjectFile } from './tools.js';
 
-export async function applyProposal(rootDir: string, proposal: AgentProposal): Promise<void> {
+export type ApplyProposalOptions = {
+  allowedCommands: Record<string, AllowedCommand>;
+};
+
+export async function applyProposal(
+  rootDir: string,
+  proposal: AgentProposal,
+  options: ApplyProposalOptions
+): Promise<void> {
   await writeLog(rootDir, {
     event: 'proposal.received',
     data: summarizeProposal(proposal)
@@ -19,7 +28,7 @@ export async function applyProposal(rootDir: string, proposal: AgentProposal): P
   }
 
   if (proposal.action === 'run_command') {
-    await applyRunCommandProposal(rootDir, proposal.command);
+    await applyRunCommandProposal(rootDir, proposal.command, options.allowedCommands);
     return;
   }
 
@@ -63,7 +72,11 @@ async function applyWriteFileProposal(rootDir: string, targetPath: string, conte
   console.log(chalk.green(result.output));
 }
 
-async function applyRunCommandProposal(rootDir: string, command: string): Promise<void> {
+async function applyRunCommandProposal(
+  rootDir: string,
+  command: string,
+  allowedCommands: Record<string, AllowedCommand>
+): Promise<void> {
   console.log(chalk.yellow('\nProposta do agente:'));
   console.log(`Ação: run_command`);
   console.log(`Comando permitido: ${command}\n`);
@@ -79,7 +92,7 @@ async function applyRunCommandProposal(rootDir: string, command: string): Promis
     return;
   }
 
-  const result = await runAllowedCommand(command, rootDir);
+  const result = await runAllowedCommand(command, rootDir, allowedCommands);
 
   await writeLog(rootDir, {
     event: 'command.executed',
