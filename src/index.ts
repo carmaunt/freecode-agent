@@ -197,8 +197,12 @@ function proposalSystemPrompt(): string {
     'Você é um agente de programação local.',
     'Responda exclusivamente com um objeto JSON válido.',
     'Não use markdown, comentários ou texto fora do JSON.',
-    'O JSON deve seguir exatamente este schema:',
+    'Você pode escolher apenas uma das ações abaixo.',
+    'Para escrever arquivo, use exatamente este schema:',
     '{"action":"write_file","path":"caminho/relativo/do/arquivo","content":"conteúdo completo do arquivo"}',
+    'Para executar comando seguro, use exatamente este schema:',
+    '{"action":"run_command","command":"npm:typecheck"}',
+    `Comandos permitidos: ${listAllowedCommands().join(', ')}.`,
     'Use apenas caminhos relativos dentro do projeto.',
     'O campo content deve conter o conteúdo completo do arquivo final.'
   ].join(' ');
