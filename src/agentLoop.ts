@@ -1,21 +1,24 @@
 import chalk from 'chalk';
 import { applyProposal } from './applyProposal.js';
-import { chatWithOllama, type OllamaMessage } from './ollama.js';
 import { collectProjectContext } from './context.js';
 import { listAllowedCommands } from './commands.js';
+import { chatWithModel, type ChatMessage, type LlmProvider } from './llm.js';
 import { listFiles } from './tools.js';
 import { parseAgentProposal } from './proposal.js';
 
 export type AgentLoopOptions = {
   rootDir: string;
   task: string;
+  provider: LlmProvider;
   model: string;
-  host: string;
+  host?: string;
+  baseUrl?: string;
+  apiKey?: string;
   maxSteps: number;
 };
 
 export async function runAgentLoop(options: AgentLoopOptions): Promise<void> {
-  const messages: OllamaMessage[] = [
+  const messages: ChatMessage[] = [
     {
       role: 'system',
       content: loopSystemPrompt()
@@ -29,8 +32,11 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<void> {
   for (let step = 1; step <= options.maxSteps; step += 1) {
     console.log(chalk.cyan(`\nEtapa ${step}/${options.maxSteps}`));
 
-    const answer = await chatWithOllama({
+    const answer = await chatWithModel({
+      provider: options.provider,
       host: options.host,
+      baseUrl: options.baseUrl,
+      apiKey: options.apiKey,
       model: options.model,
       messages
     });
