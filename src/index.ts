@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { chatWithOllama } from './ollama.js';
 import { collectProjectContext } from './context.js';
+import { listFiles } from './tools.js';
 
 const program = new Command();
 
@@ -21,7 +22,11 @@ program
     const spinner = ora('Analisando projeto...').start();
 
     try {
-      const files = await collectProjectContext(cwd);
+      const [files, tree] = await Promise.all([
+        collectProjectContext(cwd),
+        listFiles(cwd)
+      ]);
+
       const context = files
         .map((file) => `Arquivo: ${file.path}\n\n${file.content}`)
         .join('\n\n---\n\n');
@@ -38,7 +43,7 @@ program
           },
           {
             role: 'user',
-            content: `Projeto atual:\n\n${context || 'Nenhum arquivo de contexto encontrado.'}\n\nTarefa do usuário:\n${prompt}`
+            content: `Estrutura inicial do projeto:\n\n${tree.output}\n\nArquivos carregados:\n\n${context || 'Nenhum arquivo de contexto encontrado.'}\n\nTarefa do usuário:\n${prompt}`
           }
         ]
       });
