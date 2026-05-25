@@ -1,5 +1,5 @@
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, normalize, relative, resolve } from 'node:path';
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { dirname, join, normalize, relative, resolve } from 'node:path';
 
 export type ToolResult = {
   ok: boolean;
@@ -48,7 +48,24 @@ export async function readProjectFile(rootDir: string, targetPath: string): Prom
   };
 }
 
-function resolveSafePath(rootDir: string, targetPath: string): string {
+export async function writeProjectFile(
+  rootDir: string,
+  targetPath: string,
+  content: string
+): Promise<ToolResult> {
+  const safePath = resolveSafePath(rootDir, targetPath);
+  const relativePath = relative(rootDir, safePath).replaceAll('\\', '/');
+
+  await mkdir(dirname(safePath), { recursive: true });
+  await writeFile(safePath, content, 'utf8');
+
+  return {
+    ok: true,
+    output: `Arquivo salvo: ${relativePath}`
+  };
+}
+
+export function resolveSafePath(rootDir: string, targetPath: string): string {
   const normalizedTarget = normalize(targetPath);
   const resolved = resolve(rootDir, normalizedTarget);
   const resolvedRoot = resolve(rootDir);
