@@ -95,7 +95,7 @@ Esse comando força o modelo a responder em JSON, valida a resposta e salva em `
 npm run dev -- apply proposal.json
 ```
 
-O comando valida a proposta, mostra o diff e só aplica depois da confirmação.
+O comando valida a proposta, mostra diff unificado e só aplica depois da confirmação.
 
 ## Rodar loop limitado do agente
 
@@ -117,7 +117,7 @@ npm run dev -- loop --provider openai-compatible --model modelo-coder --steps 2 
 npm run dev -- write src/exemplo.ts --from rascunho.ts
 ```
 
-Esse comando copia o conteúdo de `rascunho.ts` para `src/exemplo.ts`, mostra um preview das alterações e só grava depois da confirmação no terminal.
+Esse comando copia o conteúdo de `rascunho.ts` para `src/exemplo.ts`, mostra diff unificado e só grava depois da confirmação no terminal.
 
 ## Executar comandos seguros
 
@@ -167,7 +167,7 @@ A versão 0.1 consegue:
 - retornar uma análise técnica no terminal;
 - gerar propostas JSON estruturadas usando o modelo;
 - escrever arquivos manualmente com confirmação explícita;
-- mostrar diff simples antes de salvar alterações;
+- mostrar diff unificado antes de salvar alterações;
 - aplicar propostas JSON estruturadas com validação, diff e confirmação;
 - executar comandos seguros por allowlist com timeout;
 - aplicar propostas de execução segura de comandos;
@@ -175,7 +175,7 @@ A versão 0.1 consegue:
 
 ## Próximas etapas
 
-1. Melhorar diff usando algoritmo unificado.
-2. Criar testes automatizados para parser, diff e comandos.
-3. Adicionar logs estruturados de execução.
-4. Criar configuração de comandos permitidos por projeto.
+1. Criar testes automatizados para parser, diff e comandos.
+2. Adicionar logs estruturados de execução.
+3. Criar configuração de comandos permitidos por projeto.
+4. Adicionar CI para validação de build e typecheck.
