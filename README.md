@@ -44,6 +44,26 @@ npm run dev -- write src/exemplo.ts --from rascunho.ts
 
 Esse comando copia o conteúdo de `rascunho.ts` para `src/exemplo.ts`, mostra um preview das alterações e só grava depois da confirmação no terminal.
 
+## Aplicar proposta estruturada
+
+Crie um arquivo `proposal.json` com este formato:
+
+```json
+{
+  "action": "write_file",
+  "path": "src/exemplo.ts",
+  "content": "export const message = 'hello';\n"
+}
+```
+
+Depois execute:
+
+```bash
+npm run dev -- apply proposal.json
+```
+
+O comando valida a proposta, mostra o diff e só aplica depois da confirmação.
+
 ## Estado atual
 
 A versão 0.1 consegue:
@@ -53,12 +73,12 @@ A versão 0.1 consegue:
 - enviar contexto ao Ollama;
 - retornar uma análise técnica no terminal;
 - escrever arquivos manualmente com confirmação explícita;
-- mostrar diff simples antes de salvar alterações.
+- mostrar diff simples antes de salvar alterações;
+- aplicar propostas JSON estruturadas com validação, diff e confirmação.
 
 ## Próximas etapas
 
-1. Permitir que o modelo proponha alterações estruturadas.
-2. Aplicar propostas com confirmação e diff.
-3. Adicionar execução segura de comandos.
-4. Criar loop de agente com ferramentas estruturadas.
-5. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
+1. Fazer o comando `ask` gerar propostas estruturadas automaticamente.
+2. Adicionar execução segura de comandos.
+3. Criar loop de agente com ferramentas estruturadas.
+4. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
