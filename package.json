@@ -1,0 +1,38 @@
+{
+  "name": "freecode-agent",
+  "version": "0.1.0",
+  "description": "Agente CLI local para programação usando modelos de IA locais via Ollama.",
+  "type": "module",
+  "bin": {
+    "freecode-agent": "./dist/index.js",
+    "fca": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "cli",
+    "ollama",
+    "coding-agent"
+  ],
+  "author": "carmaunt",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
