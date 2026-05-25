@@ -36,13 +36,13 @@ npm run dev -- ask "analise este projeto"
 npm run dev -- ask --model llama3.1:8b "explique a estrutura deste projeto"
 ```
 
-## Escrever arquivo com confirmação
+## Escrever arquivo com confirmação e diff
 
 ```bash
 npm run dev -- write src/exemplo.ts --from rascunho.ts
 ```
 
-Esse comando copia o conteúdo de `rascunho.ts` para `src/exemplo.ts`, mas só grava depois da confirmação no terminal.
+Esse comando copia o conteúdo de `rascunho.ts` para `src/exemplo.ts`, mostra um preview das alterações e só grava depois da confirmação no terminal.
 
 ## Estado atual
 
@@ -52,12 +52,13 @@ A versão 0.1 consegue:
 - ler arquivos pequenos de contexto;
 - enviar contexto ao Ollama;
 - retornar uma análise técnica no terminal;
-- escrever arquivos manualmente com confirmação explícita.
+- escrever arquivos manualmente com confirmação explícita;
+- mostrar diff simples antes de salvar alterações.
 
 ## Próximas etapas
 
-1. Criar modo diff antes de salvar alterações.
-2. Permitir que o modelo proponha alterações estruturadas.
+1. Permitir que o modelo proponha alterações estruturadas.
+2. Aplicar propostas com confirmação e diff.
 3. Adicionar execução segura de comandos.
 4. Criar loop de agente com ferramentas estruturadas.
 5. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
