@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import chalk from 'chalk';
 import { runAllowedCommand } from './commands.js';
 import { confirmAction } from './confirm.js';
-import { createSimpleDiff } from './diff.js';
+import { createUnifiedDiff } from './diff.js';
 import { type AgentProposal } from './proposal.js';
 import { resolveSafePath, writeProjectFile } from './tools.js';
 
@@ -24,7 +24,7 @@ export async function applyProposal(rootDir: string, proposal: AgentProposal): P
 async function applyWriteFileProposal(rootDir: string, targetPath: string, content: string): Promise<void> {
   const targetFullPath = resolveSafePath(rootDir, targetPath);
   const currentContent = await readOptionalFile(targetFullPath);
-  const diff = createSimpleDiff(currentContent, content);
+  const diff = createUnifiedDiff(currentContent, content, { filePath: targetPath });
 
   console.log(chalk.yellow('\nProposta do agente:'));
   console.log(`Ação: write_file`);
