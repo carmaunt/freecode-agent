@@ -8,7 +8,7 @@ import { loadConfig } from './config.js';
 import { collectProjectContext } from './context.js';
 import { listFiles, resolveSafePath, writeProjectFile } from './tools.js';
 import { confirmAction } from './confirm.js';
-import { createSimpleDiff } from './diff.js';
+import { createUnifiedDiff } from './diff.js';
 import { parseAgentProposal } from './proposal.js';
 import { applyProposal } from './applyProposal.js';
 import { listAllowedCommands, runAllowedCommand } from './commands.js';
@@ -130,7 +130,7 @@ program
       const content = await readFile(options.from, 'utf8');
       const targetFullPath = resolveSafePath(cwd, target);
       const currentContent = await readOptionalFile(targetFullPath);
-      const diff = createSimpleDiff(currentContent, content);
+      const diff = createUnifiedDiff(currentContent, content, { filePath: target });
 
       console.log(chalk.yellow('\nAlteração solicitada:'));
       console.log(`Arquivo destino: ${target}`);
