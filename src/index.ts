@@ -4,7 +4,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { chatWithOllama } from './ollama.js';
 import { collectProjectContext } from './context.js';
 import { listFiles, resolveSafePath, writeProjectFile } from './tools.js';
 import { confirmAction } from './confirm.js';
@@ -13,17 +12,24 @@ import { parseAgentProposal } from './proposal.js';
 import { applyProposal } from './applyProposal.js';
 import { listAllowedCommands, runAllowedCommand } from './commands.js';
 import { runAgentLoop } from './agentLoop.js';
+import { chatWithModel, type LlmProvider } from './llm.js';
 
 type AskOptions = {
+  provider: LlmProvider;
   model: string;
   host: string;
+  baseUrl?: string;
+  apiKey?: string;
   proposal?: boolean;
   out?: string;
 };
 
 type LoopOptions = {
+  provider: LlmProvider;
   model: string;
   host: string;
+  baseUrl?: string;
+  apiKey?: string;
   steps: string;
 };
 
@@ -38,8 +44,11 @@ program
   .command('ask')
   .description('Analisa o projeto atual e consulta o modelo local')
   .argument('<prompt...>', 'tarefa ou pergunta para o agente')
-  .option('-m, --model <model>', 'modelo do Ollama', 'qwen2.5-coder:7b')
+  .option('--provider <provider>', 'provider: ollama ou openai-compatible', 'ollama')
+  .option('-m, --model <model>', 'modelo do provider escolhido', 'qwen2.5-coder:7b')
   .option('--host <host>', 'URL do Ollama', 'http://localhost:11434')
+  .option('--base-url <baseUrl>', 'base URL para provider OpenAI-compatible')
+  .option('--api-key <apiKey>', 'API key para provider OpenAI-compatible')
   .option('--proposal', 'força resposta em JSON estruturado para aplicar depois')
   .option('--out <file>', 'salva a resposta do modelo em um arquivo')
   .action(async (promptParts: string[], options: AskOptions) => {
@@ -48,6 +57,7 @@ program
     const spinner = ora('Analisando projeto...').start();
 
     try {
+      const provider = parseProvider(options.provider);
       const [files, tree] = await Promise.all([
         collectProjectContext(cwd),
         listFiles(cwd)
@@ -57,10 +67,13 @@ program
         .map((file) => `Arquivo: ${file.path}\n\n${file.content}`)
         .join('\n\n---\n\n');
 
-      spinner.text = 'Consultando modelo local...';
+      spinner.text = 'Consultando modelo...';
 
-      const answer = await chatWithOllama({
+      const answer = await chatWithModel({
+        provider,
         host: options.host,
+        baseUrl: options.baseUrl,
+        apiKey: options.apiKey,
         model: options.model,
         messages: [
           {
@@ -199,11 +212,15 @@ program
   .command('loop')
   .description('Executa um loop limitado de propostas do agente')
   .argument('<task...>', 'tarefa para o agente executar em etapas')
-  .option('-m, --model <model>', 'modelo do Ollama', 'qwen2.5-coder:7b')
+  .option('--provider <provider>', 'provider: ollama ou openai-compatible', 'ollama')
+  .option('-m, --model <model>', 'modelo do provider escolhido', 'qwen2.5-coder:7b')
   .option('--host <host>', 'URL do Ollama', 'http://localhost:11434')
+  .option('--base-url <baseUrl>', 'base URL para provider OpenAI-compatible')
+  .option('--api-key <apiKey>', 'API key para provider OpenAI-compatible')
   .option('--steps <number>', 'número máximo de etapas', '2')
   .action(async (taskParts: string[], options: LoopOptions) => {
     try {
+      const provider = parseProvider(options.provider);
       const maxSteps = Number.parseInt(options.steps, 10);
 
       if (!Number.isInteger(maxSteps) || maxSteps < 1 || maxSteps > 5) {
@@ -213,8 +230,11 @@ program
       await runAgentLoop({
         rootDir: process.cwd(),
         task: taskParts.join(' '),
+        provider,
         model: options.model,
         host: options.host,
+        baseUrl: options.baseUrl,
+        apiKey: options.apiKey,
         maxSteps
       });
     } catch (error) {
@@ -223,6 +243,14 @@ program
       process.exitCode = 1;
     }
   });
+
+function parseProvider(provider: string): LlmProvider {
+  if (provider === 'ollama' || provider === 'openai-compatible') {
+    return provider;
+  }
+
+  throw new Error('Provider inválido. Use ollama ou openai-compatible.');
+}
 
 function defaultSystemPrompt(): string {
   return 'Você é um agente de programação local. Responda em português, seja técnico, direto e priorize ações seguras. Nesta versão você ainda não edita arquivos automaticamente; apenas analisa e orienta.';
