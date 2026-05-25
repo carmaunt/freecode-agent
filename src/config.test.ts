@@ -1,10 +1,41 @@
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadConfig, parseProvider } from './config.js';
 
+const ENV_KEYS = [
+  'FREECODE_PROVIDER',
+  'FREECODE_MODEL',
+  'FREECODE_OLLAMA_HOST',
+  'FREECODE_BASE_URL',
+  'FREECODE_MAX_STEPS'
+];
+
+const originalEnv = new Map<string, string | undefined>();
+
 describe('config', () => {
+  beforeEach(() => {
+    for (const key of ENV_KEYS) {
+      originalEnv.set(key, process.env[key]);
+      delete process.env[key];
+    }
+  });
+
+  afterEach(() => {
+    for (const key of ENV_KEYS) {
+      const value = originalEnv.get(key);
+
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+
+    originalEnv.clear();
+  });
+
   it('loads default config when project config is absent', async () => {
     const rootDir = await mkdtemp(join(tmpdir(), 'freecode-config-'));
     const config = await loadConfig(rootDir);
