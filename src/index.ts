@@ -79,7 +79,9 @@ program
         messages: [
           {
             role: 'system',
-            content: options.proposal ? proposalSystemPrompt() : defaultSystemPrompt()
+            content: options.proposal
+              ? proposalSystemPrompt(listAllowedCommands(config.allowedCommands))
+              : defaultSystemPrompt()
           },
           {
             role: 'user',
@@ -163,9 +165,12 @@ program
   .argument('<proposalFile>', 'arquivo contendo a proposta JSON')
   .action(async (proposalFile: string) => {
     try {
+      const config = await loadConfig(process.cwd());
       const rawProposal = await readFile(proposalFile, 'utf8');
       const proposal = parseAgentProposal(rawProposal);
-      await applyProposal(process.cwd(), proposal);
+      await applyProposal(process.cwd(), proposal, {
+        allowedCommands: config.allowedCommands
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(chalk.red('\nErro:'), message);
@@ -176,12 +181,13 @@ program
 program
   .command('run')
   .description('Executa um comando permitido com timeout')
-  .argument('<commandKey>', `comando permitido: ${listAllowedCommands().join(', ')}`)
+  .argument('<commandKey>', 'chave do comando permitido configurado')
   .action(async (commandKey: string) => {
     const spinner = ora(`Executando ${commandKey}...`).start();
 
     try {
-      const result = await runAllowedCommand(commandKey, process.cwd());
+      const config = await loadConfig(process.cwd());
+      const result = await runAllowedCommand(commandKey, process.cwd(), config.allowedCommands);
       spinner.stop();
 
       console.log(chalk.green(`\nComando: ${result.command}`));
@@ -231,7 +237,8 @@ program
         host: config.ollamaHost,
         baseUrl: config.baseUrl,
         apiKey: options.apiKey,
-        maxSteps: config.maxSteps
+        maxSteps: config.maxSteps,
+        allowedCommands: config.allowedCommands
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -244,7 +251,9 @@ function defaultSystemPrompt(): string {
   return 'Você é um agente de programação local. Responda em português, seja técnico, direto e priorize ações seguras. Nesta versão você ainda não edita arquivos automaticamente; apenas analisa e orienta.';
 }
 
-function proposalSystemPrompt(): string {
+function proposalSystemPrompt(allowedCommands: string[]): string {
+  const firstCommand = allowedCommands[0] ?? 'npm:typecheck';
+
   return [
     'Você é um agente de programação local.',
     'Responda exclusivamente com um objeto JSON válido.',
@@ -253,8 +262,8 @@ function proposalSystemPrompt(): string {
     'Para escrever arquivo, use exatamente este schema:',
     '{"action":"write_file","path":"caminho/relativo/do/arquivo","content":"conteúdo completo do arquivo"}',
     'Para executar comando seguro, use exatamente este schema:',
-    '{"action":"run_command","command":"npm:typecheck"}',
-    `Comandos permitidos: ${listAllowedCommands().join(', ')}.`,
+    `{"action":"run_command","command":"${firstCommand}"}`,
+    `Comandos permitidos: ${allowedCommands.join(', ')}.`,
     'Use apenas caminhos relativos dentro do projeto.',
     'O campo content deve conter o conteúdo completo do arquivo final.'
   ].join(' ');
