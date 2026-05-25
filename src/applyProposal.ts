@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import chalk from 'chalk';
+import { runAllowedCommand } from './commands.js';
 import { confirmAction } from './confirm.js';
 import { createSimpleDiff } from './diff.js';
 import { type AgentProposal } from './proposal.js';
@@ -8,6 +9,11 @@ import { resolveSafePath, writeProjectFile } from './tools.js';
 export async function applyProposal(rootDir: string, proposal: AgentProposal): Promise<void> {
   if (proposal.action === 'write_file') {
     await applyWriteFileProposal(rootDir, proposal.path, proposal.content);
+    return;
+  }
+
+  if (proposal.action === 'run_command') {
+    await applyRunCommandProposal(rootDir, proposal.command);
     return;
   }
 
@@ -38,6 +44,35 @@ async function applyWriteFileProposal(rootDir: string, targetPath: string, conte
 
   const result = await writeProjectFile(rootDir, targetPath, content);
   console.log(chalk.green(result.output));
+}
+
+async function applyRunCommandProposal(rootDir: string, command: string): Promise<void> {
+  console.log(chalk.yellow('\nProposta do agente:'));
+  console.log(`Ação: run_command`);
+  console.log(`Comando permitido: ${command}\n`);
+
+  const confirmed = await confirmAction('Executar este comando?');
+
+  if (!confirmed) {
+    console.log(chalk.gray('Execução cancelada.'));
+    return;
+  }
+
+  const result = await runAllowedCommand(command, rootDir);
+
+  console.log(chalk.green(`\nComando: ${result.command}`));
+  console.log(`Exit code: ${result.exitCode}`);
+  console.log(`Timeout: ${result.timedOut ? 'sim' : 'não'}\n`);
+
+  if (result.stdout.trim()) {
+    console.log(chalk.cyan('stdout:'));
+    console.log(result.stdout);
+  }
+
+  if (result.stderr.trim()) {
+    console.log(chalk.yellow('stderr:'));
+    console.log(result.stderr);
+  }
 }
 
 async function readOptionalFile(path: string): Promise<string> {
