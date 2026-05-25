@@ -2,5 +2,19 @@
   "provider": "ollama",
   "model": "qwen2.5-coder:7b",
   "ollamaHost": "http://localhost:11434",
-  "maxSteps": 2
+  "maxSteps": 2,
+  "allowedCommands": {
+    "npm:test": {
+      "command": "npm",
+      "args": ["test"]
+    },
+    "npm:build": {
+      "command": "npm",
+      "args": ["run", "build"]
+    },
+    "npm:typecheck": {
+      "command": "npm",
+      "args": ["run", "typecheck"]
+    }
+  }
 }
