@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { type AllowedCommand } from './config.js';
 
 export type CommandResult = {
   command: string;
@@ -8,31 +9,32 @@ export type CommandResult = {
   timedOut: boolean;
 };
 
-const ALLOWED_COMMANDS = new Map<string, string[]>([
-  ['npm:test', ['npm', 'test']],
-  ['npm:build', ['npm', 'run', 'build']],
-  ['npm:typecheck', ['npm', 'run', 'typecheck']]
-]);
+export const DEFAULT_ALLOWED_COMMANDS: Record<string, AllowedCommand> = {
+  'npm:test': { command: 'npm', args: ['test'] },
+  'npm:build': { command: 'npm', args: ['run', 'build'] },
+  'npm:typecheck': { command: 'npm', args: ['run', 'typecheck'] }
+};
 
-export function listAllowedCommands(): string[] {
-  return [...ALLOWED_COMMANDS.keys()];
+export function listAllowedCommands(
+  allowedCommands: Record<string, AllowedCommand> = DEFAULT_ALLOWED_COMMANDS
+): string[] {
+  return Object.keys(allowedCommands);
 }
 
 export async function runAllowedCommand(
   commandKey: string,
   cwd: string,
+  allowedCommands: Record<string, AllowedCommand> = DEFAULT_ALLOWED_COMMANDS,
   timeoutMs = 30_000
 ): Promise<CommandResult> {
-  const command = ALLOWED_COMMANDS.get(commandKey);
+  const command = allowedCommands[commandKey];
 
   if (!command) {
     throw new Error(`Comando não permitido: ${commandKey}`);
   }
 
-  const [bin, ...args] = command;
-
   return new Promise((resolve, reject) => {
-    const child = spawn(bin, args, {
+    const child = spawn(command.command, command.args, {
       cwd,
       shell: process.platform === 'win32',
       env: process.env
@@ -63,7 +65,7 @@ export async function runAllowedCommand(
     child.on('close', (exitCode) => {
       clearTimeout(timer);
       resolve({
-        command: command.join(' '),
+        command: [command.command, ...command.args].join(' '),
         exitCode,
         stdout,
         stderr,
