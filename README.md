@@ -52,6 +52,14 @@ npm run dev -- apply proposal.json
 
 O comando valida a proposta, mostra o diff e só aplica depois da confirmação.
 
+## Rodar loop limitado do agente
+
+```bash
+npm run dev -- loop --steps 2 "crie um arquivo src/hello.ts e valide o projeto"
+```
+
+O loop gera uma proposta por etapa, aplica somente após confirmação e respeita o limite máximo de 5 etapas.
+
 ## Escrever arquivo manualmente com confirmação e diff
 
 ```bash
@@ -108,11 +116,12 @@ A versão 0.1 consegue:
 - mostrar diff simples antes de salvar alterações;
 - aplicar propostas JSON estruturadas com validação, diff e confirmação;
 - executar comandos seguros por allowlist com timeout;
-- aplicar propostas de execução segura de comandos.
+- aplicar propostas de execução segura de comandos;
+- rodar um loop limitado de agente com propostas estruturadas.
 
 ## Próximas etapas
 
-1. Criar loop de agente com ferramentas estruturadas.
-2. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
-3. Melhorar diff usando algoritmo unificado.
-4. Criar testes automatizados para parser, diff e comandos.
+1. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
+2. Melhorar diff usando algoritmo unificado.
+3. Criar testes automatizados para parser, diff e comandos.
+4. Adicionar logs estruturados de execução.
