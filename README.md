@@ -60,6 +60,20 @@ npm run dev -- write src/exemplo.ts --from rascunho.ts
 
 Esse comando copia o conteúdo de `rascunho.ts` para `src/exemplo.ts`, mostra um preview das alterações e só grava depois da confirmação no terminal.
 
+## Executar comandos seguros
+
+```bash
+npm run dev -- run npm:typecheck
+```
+
+Comandos permitidos nesta versão:
+
+- `npm:test` executa `npm test`
+- `npm:build` executa `npm run build`
+- `npm:typecheck` executa `npm run typecheck`
+
+O agente não executa shell livre. Apenas comandos pré-aprovados são aceitos, com timeout padrão de 30 segundos.
+
 ## Formato da proposta
 
 ```json
@@ -81,11 +95,12 @@ A versão 0.1 consegue:
 - gerar propostas JSON estruturadas usando o modelo;
 - escrever arquivos manualmente com confirmação explícita;
 - mostrar diff simples antes de salvar alterações;
-- aplicar propostas JSON estruturadas com validação, diff e confirmação.
+- aplicar propostas JSON estruturadas com validação, diff e confirmação;
+- executar comandos seguros por allowlist com timeout.
 
 ## Próximas etapas
 
-1. Adicionar execução segura de comandos.
+1. Permitir propostas estruturadas para execução segura de comandos.
 2. Criar loop de agente com ferramentas estruturadas.
 3. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
 4. Melhorar diff usando algoritmo unificado.
