@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { applyProposal } from './applyProposal.js';
 import { collectProjectContext } from './context.js';
 import { listAllowedCommands } from './commands.js';
+import { type AllowedCommand } from './config.js';
 import { chatWithModel, type ChatMessage, type LlmProvider } from './llm.js';
 import { listFiles } from './tools.js';
 import { parseAgentProposal } from './proposal.js';
@@ -15,13 +16,14 @@ export type AgentLoopOptions = {
   baseUrl?: string;
   apiKey?: string;
   maxSteps: number;
+  allowedCommands: Record<string, AllowedCommand>;
 };
 
 export async function runAgentLoop(options: AgentLoopOptions): Promise<void> {
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: loopSystemPrompt()
+      content: loopSystemPrompt(options.allowedCommands)
     },
     {
       role: 'user',
@@ -45,12 +47,14 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<void> {
     console.log(chalk.green('\nProposta recebida:'));
     console.log(JSON.stringify(proposal, null, 2));
 
-    await applyProposal(options.rootDir, proposal);
+    await applyProposal(options.rootDir, proposal, {
+      allowedCommands: options.allowedCommands
+    });
 
     messages.push({ role: 'assistant', content: answer });
     messages.push({
       role: 'user',
-      content: 'A proposta foi processada. Se ainda houver trabalho, gere a próxima proposta JSON. Se terminou, gere uma proposta run_command usando npm:typecheck quando fizer sentido validar o projeto.'
+      content: 'A proposta foi processada. Se ainda houver trabalho, gere a próxima proposta JSON. Se terminou, gere uma proposta run_command quando fizer sentido validar o projeto.'
     });
   }
 
@@ -76,7 +80,10 @@ async function buildLoopPrompt(rootDir: string, task: string): Promise<string> {
   ].join('\n');
 }
 
-function loopSystemPrompt(): string {
+function loopSystemPrompt(allowedCommands: Record<string, AllowedCommand>): string {
+  const commandExamples = listAllowedCommands(allowedCommands);
+  const firstCommand = commandExamples[0] ?? 'npm:typecheck';
+
   return [
     'Você é um agente de programação local.',
     'Responda exclusivamente com um objeto JSON válido.',
@@ -85,8 +92,8 @@ function loopSystemPrompt(): string {
     'Para escrever arquivo, use:',
     '{"action":"write_file","path":"caminho/relativo/do/arquivo","content":"conteúdo completo do arquivo"}',
     'Para executar comando seguro, use:',
-    '{"action":"run_command","command":"npm:typecheck"}',
-    `Comandos permitidos: ${listAllowedCommands().join(', ')}.`,
+    `{"action":"run_command","command":"${firstCommand}"}`,
+    `Comandos permitidos: ${commandExamples.join(', ')}.`,
     'Use apenas caminhos relativos dentro do projeto.',
     'Nunca peça comandos fora da allowlist.',
     'O campo content deve conter o conteúdo completo do arquivo final.'
