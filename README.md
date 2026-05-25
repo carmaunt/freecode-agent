@@ -74,13 +74,24 @@ Comandos permitidos nesta versão:
 
 O agente não executa shell livre. Apenas comandos pré-aprovados são aceitos, com timeout padrão de 30 segundos.
 
-## Formato da proposta
+## Formatos de proposta
+
+Para escrever arquivo:
 
 ```json
 {
   "action": "write_file",
   "path": "src/exemplo.ts",
   "content": "export const message = 'hello';\n"
+}
+```
+
+Para executar comando seguro:
+
+```json
+{
+  "action": "run_command",
+  "command": "npm:typecheck"
 }
 ```
 
@@ -96,11 +107,12 @@ A versão 0.1 consegue:
 - escrever arquivos manualmente com confirmação explícita;
 - mostrar diff simples antes de salvar alterações;
 - aplicar propostas JSON estruturadas com validação, diff e confirmação;
-- executar comandos seguros por allowlist com timeout.
+- executar comandos seguros por allowlist com timeout;
+- aplicar propostas de execução segura de comandos.
 
 ## Próximas etapas
 
-1. Permitir propostas estruturadas para execução segura de comandos.
-2. Criar loop de agente com ferramentas estruturadas.
-3. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
-4. Melhorar diff usando algoritmo unificado.
+1. Criar loop de agente com ferramentas estruturadas.
+2. Adicionar suporte a provedores compatíveis com OpenAI além do Ollama.
+3. Melhorar diff usando algoritmo unificado.
+4. Criar testes automatizados para parser, diff e comandos.
