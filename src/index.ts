@@ -9,6 +9,8 @@ import { collectProjectContext } from './context.js';
 import { listFiles, resolveSafePath, writeProjectFile } from './tools.js';
 import { confirmAction } from './confirm.js';
 import { createSimpleDiff } from './diff.js';
+import { parseAgentProposal } from './proposal.js';
+import { applyProposal } from './applyProposal.js';
 
 const program = new Command();
 
@@ -97,6 +99,22 @@ program
 
       const result = await writeProjectFile(cwd, target, content);
       console.log(chalk.green(result.output));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red('\nErro:'), message);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command('apply')
+  .description('Aplica uma proposta JSON do agente com validação, diff e confirmação')
+  .argument('<proposalFile>', 'arquivo contendo a proposta JSON')
+  .action(async (proposalFile: string) => {
+    try {
+      const rawProposal = await readFile(proposalFile, 'utf8');
+      const proposal = parseAgentProposal(rawProposal);
+      await applyProposal(process.cwd(), proposal);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(chalk.red('\nErro:'), message);
