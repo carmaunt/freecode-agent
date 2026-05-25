@@ -133,6 +133,20 @@ Comandos permitidos nesta versão:
 
 O agente não executa shell livre. Apenas comandos pré-aprovados são aceitos, com timeout padrão de 30 segundos.
 
+## Testes
+
+```bash
+npm test
+```
+
+Esse comando executa os testes unitários com Vitest.
+
+```bash
+npm run typecheck
+```
+
+Esse comando valida os tipos TypeScript sem gerar build.
+
 ## Formatos de proposta
 
 Para escrever arquivo:
@@ -171,11 +185,12 @@ A versão 0.1 consegue:
 - aplicar propostas JSON estruturadas com validação, diff e confirmação;
 - executar comandos seguros por allowlist com timeout;
 - aplicar propostas de execução segura de comandos;
-- rodar um loop limitado de agente com propostas estruturadas.
+- rodar um loop limitado de agente com propostas estruturadas;
+- executar testes unitários com Vitest.
 
 ## Próximas etapas
 
-1. Criar testes automatizados para parser, diff e comandos.
+1. Adicionar CI para validação de build, typecheck e testes.
 2. Adicionar logs estruturados de execução.
 3. Criar configuração de comandos permitidos por projeto.
-4. Adicionar CI para validação de build e typecheck.
+4. Expandir cobertura de testes para config e LLM clients.
