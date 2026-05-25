@@ -147,6 +147,21 @@ npm run typecheck
 
 Esse comando valida os tipos TypeScript sem gerar build.
 
+```bash
+npm run build
+```
+
+Esse comando compila o projeto TypeScript para `dist`.
+
+## CI
+
+O GitHub Actions executa automaticamente em push e pull request para `main`:
+
+- `npm ci`
+- `npm test`
+- `npm run typecheck`
+- `npm run build`
+
 ## Formatos de proposta
 
 Para escrever arquivo:
@@ -186,11 +201,12 @@ A versão 0.1 consegue:
 - executar comandos seguros por allowlist com timeout;
 - aplicar propostas de execução segura de comandos;
 - rodar um loop limitado de agente com propostas estruturadas;
-- executar testes unitários com Vitest.
+- executar testes unitários com Vitest;
+- validar build, typecheck e testes com GitHub Actions.
 
 ## Próximas etapas
 
-1. Adicionar CI para validação de build, typecheck e testes.
-2. Adicionar logs estruturados de execução.
-3. Criar configuração de comandos permitidos por projeto.
-4. Expandir cobertura de testes para config e LLM clients.
+1. Adicionar logs estruturados de execução.
+2. Criar configuração de comandos permitidos por projeto.
+3. Expandir cobertura de testes para config e LLM clients.
+4. Preparar empacotamento para uso global como CLI.
