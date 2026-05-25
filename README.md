@@ -133,6 +133,22 @@ Comandos permitidos nesta versão:
 
 O agente não executa shell livre. Apenas comandos pré-aprovados são aceitos, com timeout padrão de 30 segundos.
 
+## Logs estruturados
+
+Por padrão, o agente grava eventos em JSONL dentro de:
+
+```bash
+.freecode-agent/logs
+```
+
+Os logs registram eventos como proposta recebida, arquivo escrito, comando executado e proposta cancelada. Conteúdo de arquivos, stdout/stderr bruto e chaves sensíveis não são gravados.
+
+Para desativar logs:
+
+```bash
+FREECODE_LOGS=0 npm run dev -- ask "analise este projeto"
+```
+
 ## Testes
 
 ```bash
@@ -201,12 +217,13 @@ A versão 0.1 consegue:
 - executar comandos seguros por allowlist com timeout;
 - aplicar propostas de execução segura de comandos;
 - rodar um loop limitado de agente com propostas estruturadas;
+- registrar logs estruturados sem conteúdo sensível;
 - executar testes unitários com Vitest;
 - validar build, typecheck e testes com GitHub Actions.
 
 ## Próximas etapas
 
-1. Adicionar logs estruturados de execução.
-2. Criar configuração de comandos permitidos por projeto.
-3. Expandir cobertura de testes para config e LLM clients.
-4. Preparar empacotamento para uso global como CLI.
+1. Criar configuração de comandos permitidos por projeto.
+2. Expandir cobertura de testes para config, logger e LLM clients.
+3. Preparar empacotamento para uso global como CLI.
+4. Adicionar releases automatizadas.
