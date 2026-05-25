@@ -12,12 +12,19 @@ import { createSimpleDiff } from './diff.js';
 import { parseAgentProposal } from './proposal.js';
 import { applyProposal } from './applyProposal.js';
 import { listAllowedCommands, runAllowedCommand } from './commands.js';
+import { runAgentLoop } from './agentLoop.js';
 
 type AskOptions = {
   model: string;
   host: string;
   proposal?: boolean;
   out?: string;
+};
+
+type LoopOptions = {
+  model: string;
+  host: string;
+  steps: string;
 };
 
 const program = new Command();
@@ -182,6 +189,35 @@ program
       }
     } catch (error) {
       spinner.stop();
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red('\nErro:'), message);
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command('loop')
+  .description('Executa um loop limitado de propostas do agente')
+  .argument('<task...>', 'tarefa para o agente executar em etapas')
+  .option('-m, --model <model>', 'modelo do Ollama', 'qwen2.5-coder:7b')
+  .option('--host <host>', 'URL do Ollama', 'http://localhost:11434')
+  .option('--steps <number>', 'número máximo de etapas', '2')
+  .action(async (taskParts: string[], options: LoopOptions) => {
+    try {
+      const maxSteps = Number.parseInt(options.steps, 10);
+
+      if (!Number.isInteger(maxSteps) || maxSteps < 1 || maxSteps > 5) {
+        throw new Error('O número de etapas deve ser um inteiro entre 1 e 5.');
+      }
+
+      await runAgentLoop({
+        rootDir: process.cwd(),
+        task: taskParts.join(' '),
+        model: options.model,
+        host: options.host,
+        maxSteps
+      });
+    } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(chalk.red('\nErro:'), message);
       process.exitCode = 1;
